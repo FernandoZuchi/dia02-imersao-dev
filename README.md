@@ -95,52 +95,66 @@ Modifique o arquivo `package.json` para habilitar o uso de módulos ES (`import`
 **5.1. Configuração do Banco de Dados (`src/database/db.js`)**
 
 ```javascript
-// filepath: backend/src/database/db.js
+// filepath: c:\Users\Fernando Zuchi\Desktop\dia02-imersao-dev\backend\src\database\db.js
 import sqlite3 from 'sqlite3';
 
+// Cria e exporta uma instância do banco de dados SQLite.
+// O arquivo 'database.db' será criado no diretório raiz do backend se não existir.
+// Este objeto 'db' será usado em toda a aplicação para interagir com o banco de dados.
 export const db = new sqlite3.Database('database.db');
 ```
 
 **5.2. Criação da Tabela (`src/database/migrations/create-table.js`)**
 
 ```javascript
-// filepath: backend/src/database/migrations/create-table.js
 import { db } from '../db.js';
 
+// Função para criar a tabela 'tasks' no banco de dados se ela ainda não existir.
+// Esta função é auto-executável para garantir que a tabela seja criada na inicialização da aplicação.
 export function createTable() {
+    // Executa um comando SQL para criar a tabela 'tasks'.
+    // O comando 'CREATE TABLE IF NOT EXISTS' previne erros caso a tabela já exista.
     db.run(`
         CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            description TEXT,
-            completed BOOLEAN DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            id INTEGER PRIMARY KEY AUTOINCREMENT, -- Define 'id' como chave primária autoincrementável.
+            title TEXT NOT NULL,                   -- Define 'title' como texto obrigatório.
+            description TEXT,                      -- Define 'description' como texto opcional.
+            completed BOOLEAN DEFAULT 0,           -- Define 'completed' como booleano, com valor padrão 0 (false).
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- Define 'created_at' como data e hora, com valor padrão sendo o momento da criação.
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP  -- Define 'updated_at' como data e hora, com valor padrão sendo o momento da criação/atualização.
         );
     `);
 }
 
-createTable(); // Executa a função para garantir que a tabela seja criada
+createTable(); // Executa a função para garantir que a tabela seja criada ao carregar este módulo.
 ```
 
 **5.3. Configuração do Aplicativo Fastify (`src/http/app.js`)**
 
 ```javascript
-// filepath: backend/src/http/app.js
 import fastify from "fastify";
 import { appRoutes } from "./routes/app-routes.js";
 
+// Cria uma instância do Fastify, que é o framework web utilizado.
 export const app = fastify();
 
+// Registra o plugin CORS (Cross-Origin Resource Sharing) do Fastify.
+// Isso é crucial para permitir que o frontend (rodando em uma origem diferente, ex: localhost:5173)
+// faça requisições para este backend (rodando em localhost:3333).
 app.register(import("@fastify/cors"), {
-  origin: [
-    "http://localhost:5173", // Endereço do seu frontend
-    "http://127.0.0.1:5173", // Endereço do seu frontend
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+    // 'origin' especifica quais origens são permitidas.
+    // É uma boa prática listar explicitamente os endereços do frontend.
+    origin: [
+        "http://localhost:5173" // Endereço comum de desenvolvimento do frontend Vite/React
+    ],
+    // 'methods' especifica quais métodos HTTP são permitidos nas requisições CORS.
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    // 'allowedHeaders' especifica quais cabeçalhos são permitidos nas requisições.
+    allowedHeaders: ["Content-Type", "Authorization"],
 });
 
+// Registra as rotas da aplicação definidas em 'app-routes.js'.
+// Todas as rotas definidas em 'appRoutes' serão adicionadas à instância do Fastify.
 app.register(appRoutes);
 ```
 
@@ -148,15 +162,24 @@ app.register(appRoutes);
 
 ```javascript
 // filepath: backend/src/http/server.js
+// Importa a instância configurada do Fastify (aplicação web).
 import { app } from "./app.js";
-import "../database/db.js"; // Importa para inicializar a conexão
-import "../database/migrations/create-table.js"; // Importa para criar a tabela
 
+// Importa o módulo de configuração do banco de dados.
+// A simples importação deste arquivo executa o código nele, que estabelece a conexão com o SQLite.
+import "../database/db.js"; // Importa para inicializar a conexão com o banco de dados.
+
+// Importa o módulo de migração para criação da tabela.
+// A simples importação deste arquivo executa a função 'createTable()',
+// garantindo que a tabela 'tasks' exista antes do servidor começar a aceitar requisições.
+import "../database/migrations/create-table.js"; // Importa para criar a tabela 'tasks' se não existir.
+
+// Inicia o servidor Fastify.
 app
-  .listen({
-    port: 3333,
-  })
-  .then(() => console.log("Servidor rodando em http://localhost:3333"));
+    .listen({
+        port: 3333, // Define a porta em que o servidor irá escutar.
+    })
+    .then(() => console.log("Servidor rodando em http://localhost:3333")); // Exibe uma mensagem no console quando o servidor inicia com sucesso.
 ```
 
 **5.5. Controladores de Tarefas (`src/http/routes/controllers/`)**
@@ -166,41 +189,65 @@ app
     // filepath: backend/src/http/routes/controllers/create-task.js
     import { db } from "../../../database/db.js";
 
+    // Função assíncrona para criar uma nova tarefa.
     export async function createTask(request, reply) {
-      const { title, description, completed = false } = request.body;
+        // Extrai 'title', 'description' e 'completed' do corpo da requisição.
+        // 'completed' tem um valor padrão de 'false' se não for fornecido.
+        const { title, description, completed = false } = request.body;
 
-      if (!title?.trim()) {
-        return reply
-          .status(400)
-          .send({ message: "O título da tarefa é obrigatório" });
-      }
+        // Validação: Verifica se o título da tarefa foi fornecido e não está vazio.
+        if (!title?.trim()) {
+            // Se o título for inválido, retorna um erro 400 (Bad Request).
+            return reply
+                .status(400)
+                .send({ message: "O título da tarefa é obrigatório" });
+        }
 
-      try {
-        const result = await new Promise((resolve, reject) => {
-          db.run(
-            \`INSERT INTO tasks (title, description, completed) VALUES (?, ?, ?)\`,
-            [title.trim(), description || "", completed ? 1 : 0],
-            function (error) {
-              if (error) reject(error);
-              else {
-                db.get(
-                  \`SELECT * FROM tasks WHERE id = ?\`,
-                  [this.lastID],
-                  (err, row) => {
-                    if (err) reject(err);
-                    else resolve({ ...row, completed: Boolean(row.completed) });
-                  }
+        try {
+            // Envolve a operação de banco de dados em uma Promise para lidar com a natureza assíncrona do 'sqlite3'.
+            const result = await new Promise((resolve, reject) => {
+                // Executa o comando SQL para inserir uma nova tarefa na tabela 'tasks'.
+                db.run(
+                    `INSERT INTO tasks (title, description, completed) VALUES (?, ?, ?)`,
+                    // 'title.trim()' remove espaços em branco do início e fim do título.
+                    // 'description || ""' define uma string vazia se a descrição não for fornecida.
+                    // 'completed ? 1 : 0' converte o valor booleano para 1 (true) ou 0 (false) para o SQLite.
+                    [title.trim(), description || "", completed ? 1 : 0],
+                    // A função de callback é chamada após a execução do comando 'run'.
+                    // 'this' dentro desta função refere-se ao statement da execução.
+                    function (error) {
+                        if (error) {
+                            // Se ocorrer um erro durante a inserção, rejeita a Promise.
+                            reject(error);
+                        } else {
+                            // Se a inserção for bem-sucedida, busca a tarefa recém-criada usando 'this.lastID'.
+                            // 'this.lastID' contém o ID da última linha inserida.
+                            db.get(
+                                `SELECT * FROM tasks WHERE id = ?`,
+                                [this.lastID],
+                                (err, row) => {
+                                    if (err) {
+                                        // Se ocorrer um erro ao buscar a tarefa, rejeita a Promise.
+                                        reject(err);
+                                    } else {
+                                        // Se a busca for bem-sucedida, resolve a Promise com os dados da tarefa.
+                                        // Converte o valor 'completed' de volta para booleano.
+                                        resolve({ ...row, completed: Boolean(row.completed) });
+                                    }
+                                }
+                            );
+                        }
+                    }
                 );
-              }
-            }
-          );
-        });
-        return reply.status(201).send(result);
-      } catch (error) {
-        return reply.status(500).send({
-          message: "Ocorreu um erro ao criar a tarefa: " + error.message,
-        });
-      }
+            });
+            // Retorna uma resposta 201 (Created) com os dados da tarefa criada.
+            return reply.status(201).send(result);
+        } catch (error) {
+            // Se ocorrer qualquer erro durante o processo, retorna um erro 500 (Internal Server Error).
+            return reply.status(500).send({
+                message: "Ocorreu um erro ao criar a tarefa: " + error.message,
+            });
+        }
     }
     ```
 
@@ -209,20 +256,32 @@ app
     // filepath: backend/src/http/routes/controllers/get-tasks.js
     import { db } from "../../../database/db.js";
 
+    // Função assíncrona para buscar todas as tarefas.
     export async function getTasks(request, reply) {
-      try {
-        const tasks = await new Promise((resolve, reject) => {
-          db.all(\`SELECT * FROM tasks ORDER BY created_at DESC\`, (error, rows) => {
-            if (error) reject(error);
-            else resolve(rows.map((task) => ({ ...task, completed: Boolean(task.completed) })));
-          });
-        });
-        return tasks;
-      } catch (error) {
-        return reply.status(500).send({
-          message: "Ocorreu um erro ao buscar as tarefas: " + error.message,
-        });
-      }
+        try {
+            // Envolve a operação de banco de dados em uma Promise.
+            const tasks = await new Promise((resolve, reject) => {
+                // Executa o comando SQL para selecionar todas as tarefas, ordenadas pela data de criação (mais recentes primeiro).
+                db.all(`SELECT * FROM tasks ORDER BY created_at DESC`, (error, rows) => {
+                    if (error) {
+                        // Se ocorrer um erro durante a busca, rejeita a Promise.
+                        reject(error);
+                    } else {
+                        // Se a busca for bem-sucedida, mapeia os resultados.
+                        // Converte o valor 'completed' de cada tarefa para booleano.
+                        // O SQLite armazena booleanos como 0 ou 1.
+                        resolve(rows.map((task) => ({ ...task, completed: Boolean(task.completed) })));
+                    }
+                });
+            });
+            // Retorna a lista de tarefas. O Fastify automaticamente envia como JSON com status 200 (OK).
+            return tasks;
+        } catch (error) {
+            // Se ocorrer qualquer erro durante o processo, retorna um erro 500 (Internal Server Error).
+            return reply.status(500).send({
+                message: "Ocorreu um erro ao buscar as tarefas: " + error.message,
+            });
+        }
     }
     ```
 
@@ -231,42 +290,69 @@ app
     // filepath: backend/src/http/routes/controllers/update-task.js
     import { db } from "../../../database/db.js";
 
+    // Função assíncrona para atualizar uma tarefa existente.
     export async function updateTask(request, reply) {
-      const { id } = request.params;
-      const { title, description, completed } = request.body;
+        // Extrai o 'id' da tarefa dos parâmetros da rota.
+        const { id } = request.params;
+        // Extrai 'title', 'description' e 'completed' do corpo da requisição.
+        const { title, description, completed } = request.body;
 
-      if (!title?.trim()) {
-        return reply
-          .status(400)
-          .send({ message: "O título da tarefa é obrigatório" });
-      }
-
-      try {
-        const result = await new Promise((resolve, reject) => {
-          db.run(
-            \`UPDATE tasks SET title = ?, description = ?, completed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?\`,
-            [title.trim(), description || "", completed ? 1 : 0, id],
-            function (error) {
-              if (error) reject(error);
-              else {
-                db.get(\`SELECT * FROM tasks WHERE id = ?\`, [id], (err, row) => {
-                  if (err) reject(err);
-                  else if (!row) reject(new Error("Tarefa não encontrada"));
-                  else resolve({ ...row, completed: Boolean(row.completed) });
-                });
-              }
-            }
-          );
-        });
-        return reply.status(200).send(result);
-      } catch (error) {
-        if (error.message === "Tarefa não encontrada") {
-          return reply.status(404).send({ message: error.message });
+        // Validação: Verifica se o título da tarefa foi fornecido e não está vazio.
+        if (!title?.trim()) {
+            // Se o título for inválido, retorna um erro 400 (Bad Request).
+            return reply
+                .status(400)
+                .send({ message: "O título da tarefa é obrigatório" });
         }
-        return reply.status(500).send({
-          message: "Ocorreu um erro ao atualizar a tarefa: " + error.message,
-        });
-      }
+
+        try {
+            // Envolve a operação de banco de dados em uma Promise.
+            const result = await new Promise((resolve, reject) => {
+                // Executa o comando SQL para atualizar a tarefa.
+                // Define 'title', 'description', 'completed' e atualiza 'updated_at' para o timestamp atual.
+                db.run(
+                    `UPDATE tasks SET title = ?, description = ?, completed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                    // Os valores são passados como um array.
+                    [title.trim(), description || "", completed ? 1 : 0, id],
+                    // A função de callback é chamada após a execução do comando 'run'.
+                    function (error) {
+                        if (error) {
+                            // Se ocorrer um erro durante a atualização, rejeita a Promise.
+                            reject(error);
+                        } else {
+                            // Se a atualização for bem-sucedida, busca a tarefa atualizada para retornar na resposta.
+                            db.get(`SELECT * FROM tasks WHERE id = ?`, [id], (err, row) => {
+                                if (err) {
+                                    // Se ocorrer um erro ao buscar a tarefa, rejeita a Promise.
+                                    reject(err);
+                                } else if (!row) {
+                                    // Se nenhuma tarefa com o 'id' fornecido for encontrada após a tentativa de atualização,
+                                    // (embora 'db.run' não falhe se o ID não existir, 'this.changes' seria 0),
+                                    // é uma boa prática verificar se a linha existe antes de resolver.
+                                    reject(new Error("Tarefa não encontrada"));
+                                } else {
+                                    // Se a busca for bem-sucedida, resolve a Promise com os dados da tarefa atualizada.
+                                    // Converte o valor 'completed' de volta para booleano.
+                                    resolve({ ...row, completed: Boolean(row.completed) });
+                                }
+                            });
+                        }
+                    }
+                );
+            });
+            // Retorna uma resposta 200 (OK) com os dados da tarefa atualizada.
+            return reply.status(200).send(result);
+        } catch (error) {
+            // Trata erros específicos, como "Tarefa não encontrada".
+            if (error.message === "Tarefa não encontrada") {
+                // Se a tarefa não for encontrada, retorna um erro 404 (Not Found).
+                return reply.status(404).send({ message: error.message });
+            }
+            // Para outros erros, retorna um erro 500 (Internal Server Error).
+            return reply.status(500).send({
+                message: "Ocorreu um erro ao atualizar a tarefa: " + error.message,
+            });
+        }
     }
     ```
 
@@ -275,29 +361,42 @@ app
     // filepath: backend/src/http/routes/controllers/delete-task.js
     import { db } from "../../../database/db.js";
 
+    // Função assíncrona para deletar uma tarefa existente.
     export async function deleteTask(request, reply) {
-      const { id } = request.params;
-      try {
-        await new Promise((resolve, reject) => {
-            db.run(\`DELETE FROM tasks WHERE id = ?\`, [id], function(error) {
-                if (error) {
-                    reject(error);
-                } else if (this.changes === 0) {
-                    reject(new Error("Tarefa não encontrada"));
-                } else {
-                    resolve();
-                }
+        // Extrai o 'id' da tarefa dos parâmetros da rota (ex: /tasks/:id).
+        const { id } = request.params;
+        try {
+            // Envolve a operação de banco de dados em uma Promise.
+            await new Promise((resolve, reject) => {
+                // Executa o comando SQL para deletar a tarefa com o 'id' fornecido.
+                db.run(`DELETE FROM tasks WHERE id = ?`, [id], function(error) {
+                    // 'this' dentro desta função refere-se ao statement da execução.
+                    if (error) {
+                        // Se ocorrer um erro durante a deleção, rejeita a Promise.
+                        reject(error);
+                    } else if (this.changes === 0) {
+                        // 'this.changes' indica o número de linhas afetadas pelo comando.
+                        // Se 'this.changes' for 0, significa que nenhuma tarefa com o 'id' fornecido foi encontrada.
+                        reject(new Error("Tarefa não encontrada"));
+                    } else {
+                        // Se a deleção for bem-sucedida, resolve a Promise.
+                        resolve();
+                    }
+                });
             });
-        });
-        return reply.status(200).send({ message: "Tarefa deletada com sucesso!" });
-      } catch (error) {
-        if (error.message === "Tarefa não encontrada") {
-          return reply.status(404).send({ message: error.message });
+            // Retorna uma resposta 200 (OK) com uma mensagem de sucesso.
+            return reply.status(200).send({ message: "Tarefa deletada com sucesso!" });
+        } catch (error) {
+            // Trata erros específicos, como "Tarefa não encontrada".
+            if (error.message === "Tarefa não encontrada") {
+                // Se a tarefa não for encontrada, retorna um erro 404 (Not Found).
+                return reply.status(404).send({ message: error.message });
+            }
+            // Para outros erros, retorna um erro 500 (Internal Server Error).
+            return reply.status(500).send({
+                message: "Ocorreu um erro ao deletar a tarefa: " + error.message,
+            });
         }
-        return reply.status(500).send({
-          message: "Ocorreu um erro ao deletar a tarefa: " + error.message,
-        });
-      }
     }
     ```
 
@@ -305,16 +404,32 @@ app
 
 ```javascript
 // filepath: backend/src/http/routes/app-routes.js
+// Importa as funções controladoras para cada rota.
 import { createTask } from "./controllers/create-task.js";
 import { getTasks } from "./controllers/get-tasks.js";
 import { updateTask } from "./controllers/update-task.js";
 import { deleteTask } from "./controllers/delete-task.js";
 
+// Função assíncrona para registrar todas as rotas da aplicação.
+// 'app' é a instância do Fastify.
 export async function appRoutes(app) {
-  app.post("/tasks", createTask);
-  app.get("/tasks", getTasks);
-  app.put("/tasks/:id", updateTask);
-  app.delete("/tasks/:id", deleteTask);
+    // Define a rota POST para '/tasks' que utilizará a função 'createTask'.
+    // Usada para criar novas tarefas.
+    app.post("/tasks", createTask);
+
+    // Define a rota GET para '/tasks' que utilizará a função 'getTasks'.
+    // Usada para listar todas as tarefas.
+    app.get("/tasks", getTasks);
+
+    // Define a rota PUT para '/tasks/:id' que utilizará a função 'updateTask'.
+    // ':id' é um parâmetro de rota que identifica a tarefa a ser atualizada.
+    // Usada para modificar uma tarefa existente.
+    app.put("/tasks/:id", updateTask);
+
+    // Define a rota DELETE para '/tasks/:id' que utilizará a função 'deleteTask'.
+    // ':id' é um parâmetro de rota que identifica a tarefa a ser deletada.
+    // Usada para remover uma tarefa existente.
+    app.delete("/tasks/:id", deleteTask);
 }
 ```
 
@@ -335,16 +450,16 @@ Use uma ferramenta como Insomnia, Postman ou Thunder Client (extensão do VS Cod
     *   Corpo da requisição (JSON):
         ```json
         {
-          "title": "Minha Primeira Tarefa",
-          "description": "Descrição da tarefa"
+            "title": "Minha Primeira Tarefa",
+            "description": "Descrição da tarefa"
         }
         ```
         ou
         ```json
         {
-          "title": "Tarefa completa",
-          "description": "Esta já vem completa",
-          "completed": true
+            "title": "Tarefa completa",
+            "description": "Esta já vem completa",
+            "completed": true
         }
         ```
 *   **`GET /tasks`**: Listar todas as tarefas.
@@ -352,11 +467,9 @@ Use uma ferramenta como Insomnia, Postman ou Thunder Client (extensão do VS Cod
     *   Corpo da requisição (JSON):
         ```json
         {
-          "title": "Título Atualizado",
-          "description": "Descrição atualizada",
-          "completed": true
+            "title": "Título Atualizado",
+            "description": "Descrição atualizada",
+            "completed": true
         }
         ```
 *   **`DELETE /tasks/:id`**: Deletar uma tarefa (substitua `:id` pelo ID da tarefa).
-
-Com este roteiro, o backend da sua aplicação de lista de tarefas estará funcional.

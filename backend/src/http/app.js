@@ -1,20 +1,24 @@
-// Importa o framework Fastify.
 import fastify from "fastify";
-// Importa as definições de rotas da aplicação.
 import { appRoutes } from "./routes/app-routes.js";
 
-// Cria uma instância do Fastify.
+// Cria uma instância do Fastify, que é o framework web utilizado.
 export const app = fastify();
 
-// Registra o plugin CORS (@fastify/cors) para permitir requisições de origens diferentes.
+// Registra o plugin CORS (Cross-Origin Resource Sharing) do Fastify.
+// Isso é crucial para permitir que o frontend (rodando em uma origem diferente, ex: localhost:5173)
+// faça requisições para este backend (rodando em localhost:3333).
 app.register(import("@fastify/cors"), {
-  origin: [ // Define as origens permitidas.
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+  // 'origin' especifica quais origens são permitidas.
+  // É uma boa prática listar explicitamente os endereços do frontend.
+  origin: [
+    "http://localhost:5173" // Endereço comum de desenvolvimento do frontend Vite/React
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Define os métodos HTTP permitidos.
-  allowedHeaders: ["Content-Type", "Authorization"], // Define os cabeçalhos permitidos.
+  // 'methods' especifica quais métodos HTTP são permitidos nas requisições CORS.
+  methods: ["GET", "POST", "PUT", "DELETE"], // OPTIONS é importante para "preflight requests"
+  // 'allowedHeaders' especifica quais cabeçalhos são permitidos nas requisições.
+  allowedHeaders: ["Content-Type", "Authorization"],
 });
 
-// Registra as rotas da aplicação.
+// Registra as rotas da aplicação definidas em 'app-routes.js'.
+// Todas as rotas definidas em 'appRoutes' serão adicionadas à instância do Fastify.
 app.register(appRoutes);

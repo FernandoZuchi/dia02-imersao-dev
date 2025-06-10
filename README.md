@@ -15,11 +15,14 @@ Este roteiro descreve os passos para configurar e desenvolver o backend da aplic
 Para seguir este roteiro e construir nosso backend, você precisará ter algumas ferramentas instaladas e configuradas em seu ambiente de desenvolvimento:
 
 -> **Node.js:** É um ambiente que permite executar código JavaScript fora do navegador, essencial para rodar nosso backend. Ele quem vai "entender" e executar os códigos que escreveremos para o servidor.
+
 -> **VS Code (Visual Studio Code):** Um editor de código-fonte leve, mas poderoso, com muitos recursos que facilitam o desenvolvimento, como destaque de sintaxe, autocompletar e um terminal integrado.
+
 -> **Extensões do VS Code:** Ferramentas que adicionam funcionalidades extras ao VS Code, tornando o desenvolvimento mais prático:
     *   **Thunder Client:** Permite testar as rotas (endpoints) da nossa API diretamente no editor, enviando requisições HTTP (como GET, POST, PUT, DELETE) e vendo as respostas, sem precisar de um frontend ou outra ferramenta externa inicialmente.
     *   **SQLite:** Facilita a interação com o banco de dados SQLite diretamente do VS Code, permitindo executar comandos SQL.
     *   **SQLite Viewer:** Ajuda a visualizar o conteúdo do nosso banco de dados SQLite de forma gráfica e intuitiva dentro do editor.
+    
 -> **GIT:** Um sistema de controle de versão fundamental para qualquer projeto de desenvolvimento. Ele permite rastrear todas as mudanças feitas no código, voltar para versões anteriores se algo der errado, e facilita o trabalho em equipe.
 
 ### 1. Inicialização do Projeto

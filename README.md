@@ -1,8 +1,26 @@
-# dia02-imersao-dev
+# Dia 02 - Imersão DEV - Backend em Node JS
 
-## Roteiro de Desenvolvimento do Backend (Node.js + SQLite)
+## Roteiro de Desenvolvimento do Backend/CRUD/API (Node.js + Fastify + SQLite)
 
 Este roteiro descreve os passos para configurar e desenvolver o backend da aplicação, utilizando Node.js, Fastify e SQLite.
+
+**Entendendo as Ferramentas:**
+
+*   **Node.js:** Imagine que o JavaScript, que normalmente roda nos navegadores para interagir com páginas web, pudesse também rodar diretamente no seu computador para construir o "cérebro" de uma aplicação (o backend). O Node.js é exatamente isso: um ambiente que permite executar JavaScript no lado do servidor. Ele é ótimo para criar aplicações rápidas e eficientes, especialmente aquelas que precisam lidar com muitas conexões ao mesmo tempo, como APIs.
+*   **Fastify:** Pense no Fastify como um conjunto de ferramentas e regras que nos ajuda a construir aplicações web e APIs com Node.js de forma organizada e muito rápida. Ele é conhecido por ser um dos frameworks mais velozes, o que significa que nossa API responderá às solicitações de forma ágil.
+*   **SQLite:** É um sistema de banco de dados muito prático. Diferente de bancos de dados maiores que precisam de um servidor dedicado, o SQLite armazena todos os dados em um único arquivo no nosso projeto. Ele é leve, fácil de configurar e perfeito para desenvolvimento, prototipagem e aplicações menores, pois não exige instalações complexas.
+
+## Preparação do Ambiente
+
+Para seguir este roteiro e construir nosso backend, você precisará ter algumas ferramentas instaladas e configuradas em seu ambiente de desenvolvimento:
+
+-> **Node.js:** É um ambiente que permite executar código JavaScript fora do navegador, essencial para rodar nosso backend. Ele quem vai "entender" e executar os códigos que escreveremos para o servidor.
+-> **VS Code (Visual Studio Code):** Um editor de código-fonte leve, mas poderoso, com muitos recursos que facilitam o desenvolvimento, como destaque de sintaxe, autocompletar e um terminal integrado.
+-> **Extensões do VS Code:** Ferramentas que adicionam funcionalidades extras ao VS Code, tornando o desenvolvimento mais prático:
+    *   **Thunder Client:** Permite testar as rotas (endpoints) da nossa API diretamente no editor, enviando requisições HTTP (como GET, POST, PUT, DELETE) e vendo as respostas, sem precisar de um frontend ou outra ferramenta externa inicialmente.
+    *   **SQLite:** Facilita a interação com o banco de dados SQLite diretamente do VS Code, permitindo executar comandos SQL.
+    *   **SQLite Viewer:** Ajuda a visualizar o conteúdo do nosso banco de dados SQLite de forma gráfica e intuitiva dentro do editor.
+-> **GIT:** Um sistema de controle de versão fundamental para qualquer projeto de desenvolvimento. Ele permite rastrear todas as mudanças feitas no código, voltar para versões anteriores se algo der errado, e facilita o trabalho em equipe.
 
 ### 1. Inicialização do Projeto
 

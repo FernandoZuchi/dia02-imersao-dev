@@ -14,8 +14,7 @@ app.register(import("@fastify/cors"), {
     "http://localhost:5173" // Endereço comum de desenvolvimento do frontend Vite/React
   ],
   // 'methods' especifica quais métodos HTTP são permitidos nas requisições CORS.
-  methods: ["GET", "POST", "PUT", "DELETE"], // OPTIONS é importante para "preflight requests"
-  // 'allowedHeaders' especifica quais cabeçalhos são permitidos nas requisições.
+  methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
 });
 

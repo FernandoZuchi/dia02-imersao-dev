@@ -158,7 +158,7 @@ app.register(cors, {
   // O valor true permite qualquer origem, mas para produção é recomendado especificar.
   origin: true, // Permite requisições de qualquer origem (para desenvolvimento). Em produção, especifique as URLs do frontend.
   // 'methods' especifica quais métodos HTTP são permitidos nas requisições CORS.
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // OPTIONS é importante para "preflight requests"
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   // 'allowedHeaders' especifica quais cabeçalhos são permitidos nas requisições.
   allowedHeaders: ["Content-Type", "Authorization"],
 });
